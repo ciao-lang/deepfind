@@ -39,7 +39,7 @@ This can be changed with predicates for:
 
 Find predicates that performs operations with lists 
 
-    ?- findp({ :- pred P(A,_,B) : list(A) => (list(A),list(B)). },P,R,S).
+    ?- findp(@{ :- pred P(A,_,B) : list(A) => (list(A),list(B)). @},P,R,S).
 
 Some results:
 
@@ -59,7 +59,7 @@ Some results:
 If you want only the predicates that meet the conditions to be
 displayed, you can set the last argument to checked:
 
-    ?- findp({ :- pred P(A,_,B) : list(A) => ((list(A),list(B)). },P,R,S),
+    ?- findp(@{ :- pred P(A,_,B) : list(A) => ((list(A),list(B)). @},P,R,S),
         S = checked.
 
 @section{Combining with keyword search}
@@ -67,7 +67,7 @@ displayed, you can set the last argument to checked:
 Restrictions over predicate names can be made with @tt{apropos} directive
 
 
-    ?- findp({ As. :- apropos(Spec)}, P, Res, S). 
+    ?- findp(@{ As. :- apropos(Spec)@}, P, Res, S). 
 
 Spec can be a regular expression or a keyword. Checking if the
 predicate name meets the requirements is made as in @pred{apropos/1}
@@ -76,7 +76,7 @@ in the Ciao System.
 Example:
 
 
-    ?- findp({ :- pred '_'/2 => term * string. :- apropos(write)}, P, Res, S). 
+    ?- findp(@{ :- pred '_'/2 => term * string. :- apropos(write)@}, P, Res, S). 
 
 
 @section{Search options}
