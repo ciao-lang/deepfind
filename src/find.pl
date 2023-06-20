@@ -78,7 +78,7 @@ and can be accessed with @tt{dump_size/1}, @tt{restore_time/1} and
     assertion_set_head/3,
     assertion_set_calls/3,
     assertion_set_success/3]).
-:- use_module(ciaopp(p_unit/p_dump), [restore/1]).
+:- use_module(ciaopp(p_dump), [restore/1]).
 :- use_module(ciaopp(p_unit/itf_db), [current_itf/3]).
 
 :- use_module(ciaopp(frontend_driver), [module/1]).
