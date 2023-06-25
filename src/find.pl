@@ -53,7 +53,7 @@ and can be accessed with @tt{dump_size/1}, @tt{restore_time/1} and
 
 % ---------------------------------------------------------------------------
 
-:- use_package(ciaopp(p_unit/p_unit_argnames)).
+:- use_package(library(compiler/p_unit/p_unit_argnames)).
 
 :- use_module(engine(runtime_control), [module_split/3]).
 :- use_module(engine(internals), [module_concat/3]).
@@ -73,13 +73,13 @@ and can be accessed with @tt{dump_size/1}, @tt{restore_time/1} and
 :- use_module(engine(io_basic)).
 :- use_module(engine(messages_basic), [message/2]).
 
-:- use_module(ciaopp(p_unit), [
+:- use_module(library(compiler/p_unit), [
     get_assertion/2,
     assertion_set_head/3,
     assertion_set_calls/3,
     assertion_set_success/3]).
+:- use_module(library(compiler/p_unit/itf_db), [current_itf/3]).
 :- use_module(ciaopp(p_dump), [restore/1]).
-:- use_module(ciaopp(p_unit/itf_db), [current_itf/3]).
 
 :- use_module(ciaopp(frontend_driver), [module/1]).
 :- use_module(ciaopp(analyze_driver), [analyze/1, clean_analysis_info/0]).
@@ -100,7 +100,7 @@ and can be accessed with @tt{dump_size/1}, @tt{restore_time/1} and
 % ---------------------------------------------------------------------------
 :- use_module(ciaopp(ctchecks/ctchecks_common), [abs_exec_one_assertion/6]).
 :- use_module(ciaopp(ctchecks/ctchecks_pred), [decide_get_info/4]).
-:- use_module(ciaopp(p_unit/program_keys), [predkey_from_sg/2]).
+:- use_module(library(compiler/p_unit/program_keys), [predkey_from_sg/2]).
 
 :- include(ciaopp_batch(analyze_opts)).
 

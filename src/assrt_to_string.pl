@@ -8,15 +8,15 @@
 
 :- doc(bug, "This should be implemented without writing on a file").
 
-:- use_package(ciaopp(p_unit/p_unit_argnames)).
+:- use_package(library(compiler/p_unit/p_unit_argnames)).
 
 :- use_module(library(system), [mktemp_in_tmp/2]).
 :- use_module(library(system_extra), [del_file_nofail/1]).
 :- use_module(engine(stream_basic)).
 :- use_module(library(stream_utils), [file_to_string/2]).
 :- use_module(library(write), [portray_clause/2]).
-:- use_module(ciaopp(p_unit), [assertion_set_status/3, assertion_set_head/3]).
-:- use_module(ciaopp(p_unit/p_printer), [print_assrt/2]).
+:- use_module(library(compiler/p_unit), [assertion_set_status/3, assertion_set_head/3]).
+:- use_module(library(compiler/p_unit/p_printer), [print_assrt/2]).
 
 :- export(write_assertion_to_string/2).
 :- pred write_assertion_to_string(A, AString) => string(AString)
