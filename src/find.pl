@@ -12,7 +12,7 @@
      check_time/1,
      clean_search_opts/0,
      display_search_stats/0],
-    [assertions, argnames, regexp, hiord, regtypes, datafacts]).
+    [assertions, argnames, modes, regexp, hiord, regtypes, datafacts]).
 
 :- doc(title, "Finding code").
 :- doc(author,"Isabel Garcia-Contreras").
@@ -224,7 +224,7 @@ find_add_dir(Path0) :-
             message(error, [~~(Path), ': does not exist'])
         )
     ).
-:- pred find_rm_dir(pl(Mod, ModPath)) : atm(Mod)
+:- pred find_rm_dir(Path) : atm(Path)
     #"Removes a @var{Mod} from the search.".
 find_rm_dir(Path0) :-
     fixed_absolute_file_name(Path0, '.', Path),
@@ -235,7 +235,7 @@ find_rm_dir(Path0) :-
         message(error, ['This directory was not present'])
     ).
 
-:- pred find_add_mod(ModPath) : (atm(Mod), atm(ModPath))
+:- pred find_add_mod(ModPath) : atm(ModPath)
     #"Adds to the module search set within which code will be checked.".
 find_add_mod(ModPath0) :-
     absolute_file_name(ModPath0, ModPath),
@@ -251,7 +251,7 @@ find_add_mod(ModPath0) :-
         )
     ).
 
-:- pred find_rm_mod(pl(Mod, ModPath)) : atm(Mod)
+:- pred find_rm_mod(ModPath0) : atm(ModPath0)
     #"Removes a @var{Mod} from the search.".
 find_rm_mod(ModPath0) :-
     absolute_file_name(ModPath0, ModPath),
