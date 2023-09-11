@@ -316,14 +316,14 @@ analyze_domains :- % TODO: use analyze and diagnose from ciaopp_master?
     fail.
 analyze_domains.
 
-% TODO: fix, this is done to avoid adding the fake predicate used to search to the pred list.
-get_module_predicate(Class, Pred, Mod, SearchMod) :-
-    current_itf(Class, Pred, Mod),
-    ( Mod = SearchMod ->
-        fail
-    ;
-        true
-    ).
+% % TODO: fix, this is done to avoid adding the fake predicate used to search to the pred list.
+% get_module_predicate(Class, Pred, Mod, SearchMod) :-
+%     current_itf(Class, Pred, Mod),
+%     ( Mod = SearchMod ->
+%         fail
+%     ;
+%         true
+%     ).
 
 % TODO: replace atm(Status) for assertion status regular type
 :- pred findp(+Assertions, -Pred, -Residue, Status) => atm(Status)
