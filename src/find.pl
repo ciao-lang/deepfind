@@ -614,7 +614,7 @@ display_mod_dump_stats(Mod) :-
     member(pl(FilePath, Mod), ModList),
   % TODO: hardwired domains
   display_mod_dump_absint_stats(Mod, FilePath, eterms, TA),
-  display_mod_dump_absint_stats(Mod, FilePath, shfe, TA).
+  display_mod_dump_absint_stats(Mod, FilePath, shfr, TA).
 
 display_mod_dump_absint_stats(Mod, FilePath, AbsInt, TA) :-
     dump_file(FilePath, Mod, AbsInt, FileDump),
