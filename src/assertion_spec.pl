@@ -91,12 +91,14 @@ process_clauses(S, [Cl|Cls]) :-
     process_clauses(S, Cls).
 process_clauses(_, []).
 
-process_clause(_, Cl) :-
+process_clause(_, Sentence) :-
+    Sentence = sentence(Cl, _Dict, _, _, _),
     apropos_directive(Cl), !.
-process_clause(S, Cl) :-
+process_clause(S, Sentence) :-
     search_assertion_name(Name),
-    change_and_write_assertion(S, Cl, Name), !.
-process_clause(S, Cl) :-
+    change_and_write_assertion(S, Sentence, Name), !.
+process_clause(S, Sentence) :-
+    Sentence = sentence(Cl, _Dict, _, _, _),
     portray_clause(S, Cl).
 
 change_and_write_assertion(S, Sentence, Name):-
