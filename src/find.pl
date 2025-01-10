@@ -188,6 +188,11 @@ set_search_opts([Opt|Opts]) :-
 %set_search_opt(domain(D)) :- add_domain(D).
 set_search_opt(mod(M)) :- find_add_mod(M).
 
+% TODO: use set_search_opts?
+:- export(find_use_doms/1).
+:- dynamic(find_use_doms/1).
+find_use_doms([shfr, eterms]). % TODO: hardwired
+
 :- pred find_add_bundle(BundleName) : atm(BundleName) #"Adds a bundle to the search".
 find_add_bundle(Name) :-
     ( find_loc(bundle, Name) ->
@@ -311,7 +316,8 @@ my_module(X) :-
 :- doc(section, "Analysis search predicates").
 
 analyze_domains :- % TODO: use analyze and diagnose from ciaopp_master?
-    domain(D),
+    % domain(D), % TODO: set automatically when calling my_module
+    find_use_doms(Ds), member(D, Ds),
     ( analyze(D) -> true ; fail),
     fail.
 analyze_domains.
@@ -404,9 +410,10 @@ findp_(As, P) :-
     ( no_query_as ->   % search with apropos only
         apropos_search(P)
     ;
-        ( (config_flag(reanalyze,off) ;
-            (config_flag(reanalyze,on), config_flag(allow_not_preanalyzed,off))) ->
-             Status = safe_module
+        ( ( config_flag(reanalyze,off)
+          ; config_flag(reanalyze,on), config_flag(allow_not_preanalyzed,off)
+          ) ->
+            Status = safe_module
         ;
             Status = loadable_module
         ),
@@ -421,12 +428,13 @@ process_search_parameters(Ass) :-
     store_search_data(SaveMod, NameMod),
     set_fact(aux_module(SaveMod)).
 
-:- meta_predicate overall_search(pred(3), ?).
+:- meta_predicate overall_search(pred(2), ?).
 :- pred overall_search(ModStatus, P) : var(P) => list(P)
     #"Search for predicates analyzing the modules each time".
 overall_search(ModStatus, LP) :-
     update_tasks_analysis_status,
-    analyze_search_mods([timeout(10),analysis([shfr, eterms])]),
+    find_use_doms(AllDoms),
+    analyze_search_mods([timeout(10),analysis(AllDoms)]),
     update_task_status,
     extract_info_from_locs,
     mod_list(ModList, ModStatus),
@@ -571,12 +579,12 @@ check_global_predicates(Assrts, [pl(ModPath, ModName)|ModList], FoundPreds) :-
     append(Preds, RestPreds, FoundPreds),   
     check_global_predicates(Assrts, ModList, RestPreds).
 check_global_predicates(_, [], []).
-    
+
 check_predicates_in_module(_Assertions, _ModPath, ModName, []) :-
     config_flag(allow_not_preanalyzed,off),
     Flags = [], % Flags not used at the moment
-    (\+ safe_module(ModName, eterms, Flags) ;
-        \+ safe_module(ModName, shfr, Flags)), !.
+    \+ safe_module(ModName, Flags),
+    !.
 check_predicates_in_module(Assertions, ModPath, ModName, CheckedPreds) :-
     search_arity(Arity),
     get_filtered_predicates(ModName, Arity, Preds),
@@ -612,15 +620,17 @@ display_mod_dump_stats(Mod) :-
     %stat_runtime(Mod, check, TC),
     mod_list(ModList, any_module),
     member(pl(FilePath, Mod), ModList),
-  % TODO: hardwired domains
-  display_mod_dump_absint_stats(Mod, FilePath, eterms, TA),
-  display_mod_dump_absint_stats(Mod, FilePath, shfr, TA).
+    % TODO: hardwired domains
+    find_use_doms(AllDoms),
+    display_mod_dump_absint_stats(AllDoms, Mod, FilePath, TA).
 
-display_mod_dump_absint_stats(Mod, FilePath, AbsInt, TA) :-
+display_mod_dump_absint_stats([], _Mod, _FilePath, _TA).
+display_mod_dump_absint_stats([AbsInt|AbsInts], Mod, FilePath, TA) :-
     dump_file(FilePath, Mod, AbsInt, FileDump),
     file_property(FileDump, size(Size)),
     add_size(Size),
-    format('~w & ~w & ~w & ~w\\\\ \\hline~n', [Mod, AbsInt, Size, TA]).
+    format('~w & ~w & ~w & ~w\\\\ \\hline~n', [Mod, AbsInt, Size, TA]),
+    display_mod_dump_absint_stats(AbsInts, Mod, FilePath, TA).
 
 :- data dump_size/1.
 :- pred dump_size(S) => num(S) #"@var{S} is the amount of memory (in B) needed to store an analysis dump.".
@@ -721,12 +731,19 @@ exported_pred(ModName, Arity, CompPred) :-
 %restore_analysis(_,_) :-
 %       config_flag(mult_dump_load, on), !.
 restore_analysis(FilePath, Mod) :-
-    dump_file(FilePath, Mod, eterms, D1), % TODO: hardwired domain
-    dump_file(FilePath, Mod, shfr, D2),   % TODO: hardwired domain
+    find_use_doms(AllDoms),
+    dump_file_all_doms(AllDoms, FilePath, Mod, Dumps),
     clean_analysis,
     find_set_pp_flags,
-    restore(D1),
-    restore(D2).
+    restore_all(Dumps).
+
+dump_file_all_doms([], _, _, []).
+dump_file_all_doms([AbsInt|AbsInts], FilePath, Mod, [Dump|Dumps]) :-
+    dump_file(FilePath, Mod, AbsInt, Dump),
+    dump_file_all_doms(AbsInts, FilePath, Mod, Dumps).
+
+restore_all([]).
+restore_all([F|Fs]) :- restore(F), restore_all(Fs).
 
 % TODO: uncomment when module does not delete analysis info
 :- pred restore_all_analyses(ModPaths) : list(ModPaths)
@@ -741,11 +758,9 @@ restore_all_analyses(Mods) :-
 
 restore_all_analyses_([]).
 restore_all_analyses_([pl(ModPath, ModName)|ModPaths]) :-
-    % TODO: hardwired domains
-    dump_file(ModPath, ModName, eterms, DumpFile),
-    dump_file(ModPath, ModName, shfr, DumpFile2),
-    restore(DumpFile),
-    restore(DumpFile2),
+    find_use_doms(AllDoms),
+    dump_file_all_doms(AllDoms, ModPath, ModName, Dumps),
+    restore_all(Dumps),
     restore_all_analyses_(ModPaths).
 
 :- pred make_analysis/2 # "Loads and analyzes a module and dumps the info to disk".
@@ -795,7 +810,7 @@ extract_info_from_dirs :-
     ( search_module(ModName, _) -> 
       % already added module 
         true
-    ; loadable_module(ModName, _, []) ->
+    ; loadable_module(ModName, []) ->
         asserta_fact(search_module(ModName, ModPath))
     ; true
     ),
@@ -815,8 +830,8 @@ extract_info_from_bundles :-
     fail.
 extract_info_from_bundles.
 
-:- export(mod_list/2).
-:- meta_predicate mod_list(?, pred(3)).
+%:- export(mod_list/2).
+:- meta_predicate mod_list(?, pred(2)).
 :- pred mod_list(L, ModSt) => list(L) #"@var{L} is the list of modules to 
       analyze that hold the property @var{ModSt}.".
 mod_list(L, ModStatus) :-
@@ -828,26 +843,30 @@ mod_path(Mod, Path) :-
     search_module(Mod, Path).
 
 % TODO: discard modules that timeout?
-:- meta_predicate valid_module(?, ?, pred(3)).
+:- meta_predicate valid_module(?, ?, pred(2)).
 valid_module(Mod, Path, ModStatus) :-
     search_module(Mod, Path),
-    ModStatus(Mod,eterms,[]), % TODO: hardwired domain
-    ModStatus(Mod,shfr,[]).   % TODO: hardwired domain
+    ModStatus(Mod, []).
 
-:- pred safe_module(Mod, AbsInt, Flags)
-    #"A @var{Mod} is safe if it could be loaded and analyzed with
-     @var{AbsInt} by ciaopp.".
-safe_module(Mod, AbsInt, Flags) :-
+:- pred safe_module(Mod, Flags)
+    #"A @var{Mod} is safe if it could be loaded and analyzed.".
+safe_module(Mod, Flags) :-
     task_status(Mod, _, module, Flags, ok),
-    task_status(Mod, _, AbsInt, Flags, ok).
+    find_use_doms(AllDoms),
+    safe_module_(AllDoms, Mod, Flags).
 
-:- pred loadable_module(Mod, AbsInt, Flags)
+safe_module_([], _Mod, _Flags).
+safe_module_([AbsInt|AbsInts], Mod, Flags) :-
+    task_status(Mod, _, AbsInt, Flags, ok),
+    safe_module_(AbsInts, Mod, Flags).
+
+:- pred loadable_module(Mod, Flags)
     #"A @var{Mod} is loadable if it could be loaded without errors".
-loadable_module(Mod, _, Flags) :-
+loadable_module(Mod, Flags) :-
     task_status(Mod, _, module, Flags, ok).
 
-:- pred any_module(Mod, AbsInt, Flags) #"@var{Mod} is a prolog module.".
-any_module(_,_,_).
+:- pred any_module(Mod, Flags) #"@var{Mod} is a prolog module.".
+any_module(_,_).
 
 % -------------------------------------------------------------------------
 :- doc(section, "Predicates to update analysis").
